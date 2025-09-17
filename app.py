@@ -1,6 +1,5 @@
 import streamlit as st
 from openai import OpenAI
-import random
 
 # -------------------------
 # Sidebar: API Key Handling
@@ -33,19 +32,18 @@ else:
 # App UI
 # -------------------------
 st.title("📈 AI-Powered SEO Content Generator")
-st.write("Generate Google SERP-optimized content with E-E-A-T principles.")
+st.write("Generate AI-overview optimized content with SERP-style titles and FAQs.")
 
 templates = {
-    "Resume": "Write a professional SEO-optimized resume article with examples, structure, and FAQs.",
+    "Resume": "Write a professional article with resume examples, structure, and FAQs.",
     "Cover Letter": "Create a compelling cover letter guide with examples, templates, and FAQs.",
-    "Generic": "Generate an in-depth SEO-optimized article with clear structure, examples, and FAQs.",
+    "Generic": "Generate a comprehensive, well-structured article with examples and FAQs.",
     "How to Become": "Write a step-by-step guide on how to become [ROLE], with skills, salary insights, and FAQs.",
-    "Job Description": "Write an SEO-friendly job description template with responsibilities, skills, and FAQs.",
+    "Job Description": "Write a job description template with responsibilities, skills, and FAQs.",
 }
 
 template_choice = st.selectbox("📄 Choose Template", list(templates.keys()))
 topic = st.text_input("🎯 Enter Topic / Primary Keyword", "")
-
 custom_prompt = st.text_area(
     "✍️ Customize Prompt (optional)", value=templates[template_choice], height=120
 )
@@ -61,55 +59,82 @@ if generate_button:
     elif not topic.strip():
         st.error("❌ Please enter a topic/primary keyword.")
     else:
-        with st.spinner("✨ Generating SEO content..."):
+        with st.spinner("✨ Generating SERP-style titles..."):
             try:
-                prompt = f"""
-                Generate a long-form SEO article on "{topic}".
-                Must follow Google E-E-A-T guidelines:
-                - Show experience, expertise, authority, and trustworthiness.
-                - Include introduction, key sections, examples, and conclusion.
-                - Add FAQs at the end (with detailed answers).
-                - Use engaging formats (tables, bullet points, checkboxes, infographics, graphs where possible).
-                - Ensure readability and keyword optimization without stuffing.
-                - Follow template style: {custom_prompt}
+                # 1. Generate 5 SERP-style titles
+                title_prompt = f"""
+                Generate 5 article titles for the topic: "{topic}".
+                The titles should mimic top-ranking website titles in Google SERPs.
+                Keep them engaging, concise, and click-worthy.
                 """
-
-                response = client.chat.completions.create(
+                title_response = client.chat.completions.create(
                     model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.7,
-                    max_tokens=1500,
+                    messages=[{"role": "user", "content": title_prompt}],
+                    temperature=0.6,
+                    max_tokens=200,
                 )
+                titles_text = title_response.choices[0].message.content
+                titles_list = [t.strip("-•0123456789. ") for t in titles_text.split("\n") if t.strip()]
 
-                article = response.choices[0].message.content
+                selected_title = st.selectbox("📝 Select Article Title", titles_list)
 
-                st.success("✅ Content Generated Successfully!")
-                st.markdown(article)
-
-                # -------------------------
-                # Add Sample Engagement Blocks
-                # -------------------------
-                st.subheader("📊 Example Data Visualization")
-                st.bar_chart(
-                    {
-                        "Skills Demand": [random.randint(40, 90) for _ in range(5)],
-                        "Salary Growth": [random.randint(50, 100) for _ in range(5)],
-                    }
-                )
-
-                st.subheader("🖼️ Suggested Image Placeholder")
-                st.image("https://placehold.co/600x400?text=Infographic+Placeholder")
-
-                st.subheader("✅ Checklist Example")
-                st.write(
+                if selected_title:
+                    # 2. Generate AI Overview Summary
+                    summary_prompt = f"""
+                    Write a concise, direct answer summary (50–80 words) for the topic: "{topic}".
+                    This should be optimized for AI Overview and featured snippet visibility.
+                    Use the selected article title: "{selected_title}".
                     """
-                    - [ ] Step 1: Research keywords  
-                    - [ ] Step 2: Optimize metadata  
-                    - [ ] Step 3: Add engaging visuals  
-                    - [ ] Step 4: Include FAQs  
-                    - [ ] Step 5: Review for E-E-A-T  
+                    summary_response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": summary_prompt}],
+                        temperature=0.4,
+                        max_tokens=200,
+                    )
+                    ai_summary = summary_response.choices[0].message.content
+
+                    # 3. Generate Full Article
+                    article_prompt = f"""
+                    Generate a detailed article on "{topic}" with the title "{selected_title}".
+                    Requirements:
+                    - Start with a clear introduction.
+                    - Add structured sections with subheadings, examples, and FAQs.
+                    - Include bullet points, checklists where useful.
+                    - Avoid mentioning Google or algorithms.
+                    - Follow this style: {custom_prompt}
                     """
-                )
+                    article_response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": article_prompt}],
+                        temperature=0.7,
+                        max_tokens=1500,
+                    )
+                    article = article_response.choices[0].message.content
+
+                    # -------------------------
+                    # Display
+                    # -------------------------
+                    st.success("✅ Content Generated Successfully!")
+
+                    st.subheader("🖋️ Article Title")
+                    st.markdown(f"**{selected_title}**")
+
+                    st.subheader("🔎 AI Overview Answer Summary")
+                    st.markdown(f"> {ai_summary}")
+
+                    st.subheader("📄 Full Article")
+                    st.markdown(article)
+
+                    st.subheader("✅ Checklist Example")
+                    st.write(
+                        """
+                        - [ ] Step 1: Research keywords  
+                        - [ ] Step 2: Optimize headings and subheadings  
+                        - [ ] Step 3: Use bullet points and checklists  
+                        - [ ] Step 4: Include FAQs  
+                        - [ ] Step 5: Review content for clarity and accuracy  
+                        """
+                    )
 
             except Exception as e:
                 st.error(f"⚠️ Error: {e}")
