@@ -1,0 +1,7 @@
+streamlit
+openai
+keybert
+sentence-transformers
+matplotlib
+pandas
+markdown
