@@ -35,7 +35,7 @@ st.title("📈 AI-Powered SEO Content Generator (India-Focused)")
 st.write("Generate AI-overview optimized content with SERP-style titles, FAQs, and India-specific template examples.")
 
 templates = {
-    "Resume": "Write a professional article with resume examples, structure, and FAQs.",
+    "Resume": "Write a professional article with topic-specific resume examples, structure, and FAQs.",
     "Cover Letter": "Create a compelling cover letter guide with examples, templates, and FAQs.",
     "Generic": "Generate a comprehensive, well-structured article with examples and FAQs.",
     "How to Become": "Write a step-by-step guide on how to become [ROLE], with skills, salary insights, and FAQs.",
@@ -115,17 +115,38 @@ if generate_button:
                     )
                     article = article_response.choices[0].message.content
 
-                    # 4. Generate 3–4 examples/templates (India-focused)
-                    examples_prompt = f"""
-                    Generate 3–4 distinct examples for the chosen template "{template_choice}" on the topic "{topic}".
-                    - Ensure all examples are human-like, plagiarism-free, and contextualized for India.
-                    - If Resume: provide 3–4 Indian-style resume templates (format, examples, job roles relevant to India).
-                    - If Cover Letter: provide 3–4 Indian-context cover letter examples.
-                    - If Generic: provide 3–4 articles/blog examples relevant to Indian readers.
-                    - If How to Become: provide 3–4 step-by-step guides relevant to Indian industries and roles.
-                    - If Job Description: provide 3–4 job description templates reflecting Indian companies and job market.
-                    Separate each example clearly, and number them.
+                    # 4. Generate FAQs (India-focused)
+                    faq_prompt = f"""
+                    Generate 5–7 frequently asked questions (FAQs) with concise answers for the topic: "{topic}".
+                    - Ensure questions are relevant to Indian readers.
+                    - Include answers that are human-like, plagiarism-free, and easy to read.
+                    - Make the answers actionable and informative.
+                    - Format each FAQ clearly as: Q: ... A: ...
                     """
+                    faq_response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": faq_prompt}],
+                        temperature=0.7,
+                        max_tokens=600,
+                    )
+                    faq_text = faq_response.choices[0].message.content
+
+                    # 5. Generate Resume/topic-specific examples or other templates
+                    if template_choice == "Resume":
+                        examples_prompt = f"""
+                        Generate 1 fully detailed resume for the role/topic: "{topic}".
+                        Requirements:
+                        - Include standard sections: Contact Info, Professional Summary, Skills, Experience, Education, Achievements.
+                        - Use Indian context (Indian job market, companies, educational institutions, salary ranges if relevant).
+                        - Make the resume human-like and plagiarism-free.
+                        - Provide 2–3 variations if possible (fresher, mid-level, experienced), each clearly separated and numbered.
+                        """
+                    else:
+                        examples_prompt = f"""
+                        Generate 3–4 distinct examples for the chosen template "{template_choice}" on the topic "{topic}".
+                        - Ensure all examples are human-like, plagiarism-free, and contextualized for India.
+                        - Follow previous guidelines for Cover Letter, Generic, How to Become, Job Description.
+                        """
                     examples_response = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[{"role": "user", "content": examples_prompt}],
@@ -147,6 +168,9 @@ if generate_button:
 
                     st.subheader("📄 Full Article")
                     st.markdown(article)
+
+                    st.subheader("❓ Frequently Asked Questions (FAQs)")
+                    st.markdown(faq_text)
 
                     st.subheader(f"📚 {template_choice} Examples / Templates")
                     st.markdown(examples_text)
@@ -175,6 +199,9 @@ AI Overview Answer Summary:
 Full Article:
 {article}
 
+FAQs:
+{faq_text}
+
 {template_choice} Examples / Templates:
 {examples_text}
 """
@@ -202,6 +229,9 @@ Full Article:
 
 <h2>Full Article</h2>
 <p>{article.replace('\n', '<br>')}</p>
+
+<h2>FAQs</h2>
+<p>{faq_text.replace('\n', '<br>')}</p>
 
 <h2>{template_choice} Examples / Templates</h2>
 <p>{examples_text.replace('\n', '<br>')}</p>
