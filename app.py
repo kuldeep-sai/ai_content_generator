@@ -65,12 +65,12 @@ if generate_button:
                 title_prompt = f"""
                 Generate 5 article titles for the topic: "{topic}".
                 The titles should mimic top-ranking website titles in Google SERPs.
-                Keep them engaging, concise, and click-worthy.
+                Keep them engaging, concise, click-worthy, and human-like.
                 """
                 title_response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[{"role": "user", "content": title_prompt}],
-                    temperature=0.6,
+                    temperature=0.7,
                     max_tokens=200,
                 )
                 titles_text = title_response.choices[0].message.content
@@ -82,13 +82,14 @@ if generate_button:
                     # 2. Generate AI Overview Summary
                     summary_prompt = f"""
                     Write a concise, direct answer summary (50–80 words) for the topic: "{topic}".
-                    This should be optimized for AI Overview and featured snippet visibility.
                     Use the selected article title: "{selected_title}".
+                    - Make it human-like and natural, not detectable as AI-generated.
+                    - Ensure it is plagiarism-free and unique.
                     """
                     summary_response = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[{"role": "user", "content": summary_prompt}],
-                        temperature=0.4,
+                        temperature=0.7,
                         max_tokens=200,
                     )
                     ai_summary = summary_response.choices[0].message.content
@@ -100,7 +101,7 @@ if generate_button:
                     - Start with a clear introduction.
                     - Add structured sections with subheadings, examples, and FAQs.
                     - Include bullet points, checklists where useful.
-                    - Avoid mentioning Google or algorithms.
+                    - Make the writing human-like, natural, and plagiarism-free.
                     - Follow this style: {custom_prompt}
                     """
                     article_response = client.chat.completions.create(
@@ -114,6 +115,7 @@ if generate_button:
                     # 4. Generate 3–4 examples/templates based on selected template
                     examples_prompt = f"""
                     Generate 3–4 distinct examples for the chosen template "{template_choice}" on the topic "{topic}".
+                    - Make all examples human-like and plagiarism-free.
                     - If Resume: provide 3–4 resume templates with headings, structure, and sample content.
                     - If Cover Letter: provide 3–4 cover letter examples.
                     - If Generic: provide 3–4 article or blog examples.
