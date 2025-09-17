@@ -130,7 +130,7 @@ if generate_button:
                     examples_text = examples_response.choices[0].message.content
 
                     # -------------------------
-                    # Display
+                    # Display Content
                     # -------------------------
                     st.success("✅ Content Generated Successfully!")
 
@@ -157,12 +157,10 @@ if generate_button:
                         """
                     )
 
-            except Exception as e:
-                st.error(f"⚠️ Error: {e}")
-# -------------------------
-# Prepare content for download
-# -------------------------
-download_content = f"""
+                    # -------------------------
+                    # Download Button (TXT)
+                    # -------------------------
+                    download_content = f"""
 Article Title:
 {selected_title}
 
@@ -175,10 +173,12 @@ Full Article:
 {template_choice} Examples / Templates:
 {examples_text}
 """
+                    st.download_button(
+                        label="💾 Download All Outputs as TXT",
+                        data=download_content,
+                        file_name=f"{topic.replace(' ', '_')}_SEO_Content.txt",
+                        mime="text/plain"
+                    )
 
-st.download_button(
-    label="💾 Download All Outputs as TXT",
-    data=download_content,
-    file_name=f"{topic.replace(' ', '_')}_SEO_Content.txt",
-    mime="text/plain"
-)
+            except Exception as e:
+                st.error(f"⚠️ Error: {e}")
