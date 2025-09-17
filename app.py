@@ -32,7 +32,7 @@ else:
 # App UI
 # -------------------------
 st.title("📈 AI-Powered SEO Content Generator")
-st.write("Generate AI-overview optimized content with SERP-style titles and FAQs.")
+st.write("Generate AI-overview optimized content with SERP-style titles, FAQs, and template examples.")
 
 templates = {
     "Resume": "Write a professional article with resume examples, structure, and FAQs.",
@@ -59,7 +59,7 @@ if generate_button:
     elif not topic.strip():
         st.error("❌ Please enter a topic/primary keyword.")
     else:
-        with st.spinner("✨ Generating SERP-style titles..."):
+        with st.spinner("✨ Generating content..."):
             try:
                 # 1. Generate 5 SERP-style titles
                 title_prompt = f"""
@@ -111,6 +111,24 @@ if generate_button:
                     )
                     article = article_response.choices[0].message.content
 
+                    # 4. Generate 3–4 examples/templates based on selected template
+                    examples_prompt = f"""
+                    Generate 3–4 distinct examples for the chosen template "{template_choice}" on the topic "{topic}".
+                    - If Resume: provide 3–4 resume templates with headings, structure, and sample content.
+                    - If Cover Letter: provide 3–4 cover letter examples.
+                    - If Generic: provide 3–4 article or blog examples.
+                    - If How to Become: provide 3–4 step-by-step guides or sample outlines.
+                    - If Job Description: provide 3–4 job description templates with responsibilities and skills.
+                    Separate each example clearly, and number them.
+                    """
+                    examples_response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": examples_prompt}],
+                        temperature=0.7,
+                        max_tokens=1000,
+                    )
+                    examples_text = examples_response.choices[0].message.content
+
                     # -------------------------
                     # Display
                     # -------------------------
@@ -125,6 +143,9 @@ if generate_button:
                     st.subheader("📄 Full Article")
                     st.markdown(article)
 
+                    st.subheader(f"📚 {template_choice} Examples / Templates")
+                    st.markdown(examples_text)
+
                     st.subheader("✅ Checklist Example")
                     st.write(
                         """
@@ -138,3 +159,26 @@ if generate_button:
 
             except Exception as e:
                 st.error(f"⚠️ Error: {e}")
+# -------------------------
+# Prepare content for download
+# -------------------------
+download_content = f"""
+Article Title:
+{selected_title}
+
+AI Overview Answer Summary:
+{ai_summary}
+
+Full Article:
+{article}
+
+{template_choice} Examples / Templates:
+{examples_text}
+"""
+
+st.download_button(
+    label="💾 Download All Outputs as TXT",
+    data=download_content,
+    file_name=f"{topic.replace(' ', '_')}_SEO_Content.txt",
+    mime="text/plain"
+)
