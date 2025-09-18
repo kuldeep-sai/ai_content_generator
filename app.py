@@ -32,7 +32,7 @@ else:
 # App UI
 # -------------------------
 st.title("📈 AI-Powered SEO Content Generator (India-Focused)")
-st.write("Generate AI-overview optimized content with SERP-style titles, FAQs, and India-specific template examples.")
+st.write("Generate SEO-optimized articles with FAQs, examples, and a quality checklist (India-focused).")
 
 templates = {
     "Resume": "Write a professional article with topic-specific resume examples, structure, and FAQs.",
@@ -51,6 +51,36 @@ custom_prompt = st.text_area(
 generate_button = st.button("🚀 Generate Optimized Content")
 
 # -------------------------
+# Master Prompt
+# -------------------------
+master_prompt = """
+You are an expert Indian SEO content strategist.
+
+Write a plagiarism-free, AI-detection-free article based on the given topic and title.
+Follow Google’s SEO guidelines + E-E-A-T principles.
+Ensure Indian context (use Indian companies, salaries, culture, examples).
+
+## Content Requirements:
+1. Title & Meta Description
+2. Introduction
+3. Main Body with H2/H3 headings, examples, lists
+4. FAQs (People Also Ask style, India-focused)
+5. Practical Examples/Templates
+6. Conclusion
+
+At the end, add a Content Quality Checklist with ✅ or ❌ for:
+- SEO Optimization
+- E-E-A-T
+- Indian Context
+- Structure & Formatting
+- Human-like tone
+- Actionable Value
+- Readability
+
+Suggest a 1-line fix for any ❌.
+"""
+
+# -------------------------
 # Content Generation Logic
 # -------------------------
 if generate_button:
@@ -63,10 +93,9 @@ if generate_button:
             try:
                 # 1. Generate 5 SERP-style titles (India-focused)
                 title_prompt = f"""
-                Generate 5 article titles for the topic: "{topic}".
-                The titles should mimic top-ranking website titles in Google SERPs.
-                Keep them engaging, concise, click-worthy, human-like.
-                Ensure the titles are relevant to Indian readers, with India-specific context or examples where applicable.
+                Generate 5 SEO-friendly article titles for: "{topic}".
+                Titles must mimic top-ranking Google SERPs.
+                Keep them concise, engaging, and contextualized for India.
                 """
                 title_response = client.chat.completions.create(
                     model="gpt-4o-mini",
@@ -80,80 +109,35 @@ if generate_button:
                 selected_title = st.selectbox("📝 Select Article Title", titles_list)
 
                 if selected_title:
-                    # 2. Generate AI Overview Summary (India-focused)
+                    # 2. Generate AI Overview Summary
                     summary_prompt = f"""
-                    Write a concise, direct answer summary (50–80 words) for the topic: "{topic}".
-                    Use the selected article title: "{selected_title}".
-                    - Make it human-like and natural, not detectable as AI-generated.
-                    - Ensure it is plagiarism-free and unique.
-                    - Contextualize all information for Indian readers (examples, references, spelling, and phrasing).
+                    Write a concise summary (50–80 words) for "{topic}".
+                    Use the title: "{selected_title}".
+                    Ensure it is plagiarism-free, natural, and contextualized for Indian readers.
                     """
                     summary_response = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[{"role": "user", "content": summary_prompt}],
-                        temperature=0.7,
+                        temperature=0.6,
                         max_tokens=200,
                     )
                     ai_summary = summary_response.choices[0].message.content
 
-                    # 3. Generate Full Article (India-focused)
+                    # 3. Generate Full Article
                     article_prompt = f"""
-                    Generate a detailed article on "{topic}" with the title "{selected_title}".
-                    Requirements:
-                    - Start with a clear introduction.
-                    - Add structured sections with subheadings, examples, and FAQs.
-                    - Include bullet points, checklists where useful.
-                    - Make the writing human-like, natural, plagiarism-free.
-                    - Contextualize all content for India (jobs, salaries, companies, culture, examples).
-                    - Follow this style: {custom_prompt}
+                    Topic: "{topic}"
+                    Title: "{selected_title}"
+                    {custom_prompt}
+
+                    {master_prompt}
                     """
                     article_response = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[{"role": "user", "content": article_prompt}],
-                        temperature=0.7,
+                        temperature=0.6,
                         max_tokens=1500,
                     )
-                    article = article_response.choices[0].message.content
-
-                    # 4. Generate FAQs (India-focused)
-                    faq_prompt = f"""
-                    Generate 5–7 frequently asked questions (FAQs) with concise answers for the topic: "{topic}".
-                    - Ensure questions are relevant to Indian readers.
-                    - Include answers that are human-like, plagiarism-free, and easy to read.
-                    - Make the answers actionable and informative.
-                    - Format each FAQ clearly as: Q: ... A: ...
-                    """
-                    faq_response = client.chat.completions.create(
-                        model="gpt-4o-mini",
-                        messages=[{"role": "user", "content": faq_prompt}],
-                        temperature=0.7,
-                        max_tokens=600,
-                    )
-                    faq_text = faq_response.choices[0].message.content
-
-                    # 5. Generate Resume/topic-specific examples or other templates
-                    if template_choice == "Resume":
-                        examples_prompt = f"""
-                        Generate 1 fully detailed resume for the role/topic: "{topic}".
-                        Requirements:
-                        - Include standard sections: Contact Info, Professional Summary, Skills, Experience, Education, Achievements.
-                        - Use Indian context (Indian job market, companies, educational institutions, salary ranges if relevant).
-                        - Make the resume human-like and plagiarism-free.
-                        - Provide 2–3 variations if possible (fresher, mid-level, experienced), each clearly separated and numbered.
-                        """
-                    else:
-                        examples_prompt = f"""
-                        Generate 3–4 distinct examples for the chosen template "{template_choice}" on the topic "{topic}".
-                        - Ensure all examples are human-like, plagiarism-free, and contextualized for India.
-                        - Follow previous guidelines for Cover Letter, Generic, How to Become, Job Description.
-                        """
-                    examples_response = client.chat.completions.create(
-                        model="gpt-4o-mini",
-                        messages=[{"role": "user", "content": examples_prompt}],
-                        temperature=0.7,
-                        max_tokens=1000,
-                    )
-                    examples_text = examples_response.choices[0].message.content
+                    article_text = article_response.choices[0].message.content
 
                     # -------------------------
                     # Display Content
@@ -167,27 +151,10 @@ if generate_button:
                     st.markdown(f"> {ai_summary}")
 
                     st.subheader("📄 Full Article")
-                    st.markdown(article)
-
-                    st.subheader("❓ Frequently Asked Questions (FAQs)")
-                    st.markdown(faq_text)
-
-                    st.subheader(f"📚 {template_choice} Examples / Templates")
-                    st.markdown(examples_text)
-
-                    st.subheader("✅ Checklist Example")
-                    st.write(
-                        """
-                        - [ ] Step 1: Research keywords  
-                        - [ ] Step 2: Optimize headings and subheadings  
-                        - [ ] Step 3: Use bullet points and checklists  
-                        - [ ] Step 4: Include FAQs  
-                        - [ ] Step 5: Review content for clarity and accuracy  
-                        """
-                    )
+                    st.markdown(article_text)
 
                     # -------------------------
-                    # Download Button (TXT)
+                    # Export Buttons
                     # -------------------------
                     download_content = f"""
 Article Title:
@@ -197,24 +164,15 @@ AI Overview Answer Summary:
 {ai_summary}
 
 Full Article:
-{article}
-
-FAQs:
-{faq_text}
-
-{template_choice} Examples / Templates:
-{examples_text}
+{article_text}
 """
                     st.download_button(
-                        label="💾 Download All Outputs as TXT",
+                        label="💾 Download as TXT",
                         data=download_content,
                         file_name=f"{topic.replace(' ', '_')}_SEO_Content.txt",
                         mime="text/plain"
                     )
 
-                    # -------------------------
-                    # Download Button (HTML)
-                    # -------------------------
                     html_content = f"""
 <html>
 <head>
@@ -228,28 +186,12 @@ FAQs:
 <p>{ai_summary}</p>
 
 <h2>Full Article</h2>
-<p>{article.replace('\n', '<br>')}</p>
-
-<h2>FAQs</h2>
-<p>{faq_text.replace('\n', '<br>')}</p>
-
-<h2>{template_choice} Examples / Templates</h2>
-<p>{examples_text.replace('\n', '<br>')}</p>
-
-<h2>Checklist</h2>
-<ul>
-<li>Step 1: Research keywords</li>
-<li>Step 2: Optimize headings and subheadings</li>
-<li>Step 3: Use bullet points and checklists</li>
-<li>Step 4: Include FAQs</li>
-<li>Step 5: Review content for clarity and accuracy</li>
-</ul>
+<p>{article_text.replace('\n', '<br>')}</p>
 </body>
 </html>
 """
-
                     st.download_button(
-                        label="💾 Download All Outputs as HTML",
+                        label="💾 Download as HTML",
                         data=html_content,
                         file_name=f"{topic.replace(' ', '_')}_SEO_Content.html",
                         mime="text/html"
